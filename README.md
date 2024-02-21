@@ -1,10 +1,10 @@
-# Project Title
+# Sandox of data science-y things
 
-Simple overview of use/purpose.
+My Portfolio < Your Portfolio
 
 ## Description
 
-An in-depth paragraph about your project and overview of use.
+Here's some reference material.
 
 ## Getting Started
 
