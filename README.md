@@ -1,62 +1,40 @@
-# Sandox of data science-y things
+# Example of complete mlOPs
 
-My Portfolio < Your Portfolio
+Step-by-step walk-thru of the ml cycle from EDA to model build and finally deployment.
 
-## Description
+## Table of Contents
 
-Here's some reference material.
+- [Exploratory Data Analysis](projects/01-eda-case-study)
+- [Machine Learning Pipeline](projects/02-machine-learning-pipeline)
+- [MLOps & Model Deployment](projects/03-mlops-deployment)
 
 ## Getting Started
 
-### Dependencies
+### Skills Demonstrated
 
-* Describe any prerequisites, libraries, OS version, etc., needed before installing program.
-* ex. Windows 10
+* Data Wrangling: Pandas, NumPy
+* Machine Learning: Scikit-learn, XGBoost, TensorFlow/PyTorch
+* MLOps: FastAPI, Docker, CI/CD, Kubernetes
+* Visualization: Matplotlib, Seaborn, Plotly
 
-### Installing
+### How to run
 
-* How/where to download your program
-* Any modifications needed to be made to files/folders
+git clone https://github.com/yourusername/ml-portfolio.git
+cd ml-portfolio
+pip install -r requirements.txt
 
-### Executing program
-
-* How to run the program
-* Step-by-step bullets
-```
-code blocks for commands
-```
 
 ## Help
 
 Any advise for common problems or issues.
-```
-command to run if program contains helper info
-```
+
 
 ## Authors
 
-Contributors names and contact info
-
-ex. Dominique Pizzie  
-ex. [@DomPizzie](https://twitter.com/dompizzie)
-
-## Version History
-
-* 0.2
-    * Various bug fixes and optimizations
-    * See [commit change]() or See [release history]()
-* 0.1
-    * Initial Release
+Noren Livingston, M.S.
+norenlivingston@gmail.com
 
 ## License
 
 This project is licensed under the [NAME HERE] License - see the LICENSE.md file for details
 
-## Acknowledgments
-
-Inspiration, code snippets, etc.
-* [awesome-readme](https://github.com/matiassingers/awesome-readme)
-* [PurpleBooth](https://gist.github.com/PurpleBooth/109311bb0361f32d87a2)
-* [dbader](https://github.com/dbader/readme-template)
-* [zenorocha](https://gist.github.com/zenorocha/4526327)
-* [fvcproductions](https://gist.github.com/fvcproductions/1bfc2d4aecb01a834b46)
