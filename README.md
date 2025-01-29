@@ -19,8 +19,8 @@ Step-by-step walk-thru of the ml cycle from EDA to model build and finally deplo
 
 ### How to run
 
-git clone https://github.com/yourusername/ml-portfolio.git
-cd ml-portfolio
+git clone https://github.com/yourusername/ml-portfolio.git \
+cd ml-portfolio\
 pip install -r requirements.txt
 
 
@@ -31,7 +31,7 @@ Any advise for common problems or issues.
 
 ## Authors
 
-Noren Livingston, M.S.
+Noren Livingston, M.S.\
 norenlivingston@gmail.com
 
 ## License
