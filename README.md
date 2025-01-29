@@ -4,9 +4,9 @@ Step-by-step walk-thru of the ml cycle from EDA to model build and finally deplo
 
 ## Table of Contents
 
-- [Exploratory Data Analysis](projects/01-eda-case-study)
-- [Machine Learning Pipeline](projects/02-machine-learning-pipeline)
-- [MLOps & Model Deployment](projects/03-mlops-deployment)
+- [Exploratory Data Analysis](projects/01_eda)
+- [Machine Learning Pipeline](projects/02_ml-pipeline)
+- [MLOps & Model Deployment](projects/03_mlops)
 
 ## Getting Started
 
