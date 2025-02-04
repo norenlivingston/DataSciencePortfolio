@@ -102,3 +102,119 @@ def check_high_vif(df, threshold=3):
 
 # Display first few rows
 print(df_transformed.head())
+
+# Function to detect and replace outliers
+def detect_and_replace_outliers(df, method="iqr", threshold=1.5, strategy="median"):
+    df_cleaned = df.copy()
+    outliers_dict = {}
+
+    for col in df.select_dtypes(include=[np.number]).columns:  # Only check numeric columns
+        if method == "iqr":
+            Q1 = df[col].quantile(0.25)
+            Q3 = df[col].quantile(0.75)
+            IQR = Q3 - Q1
+            lower_bound = Q1 - threshold * IQR
+            upper_bound = Q3 + threshold * IQR
+            outliers = df[(df[col] < lower_bound) | (df[col] > upper_bound)].index
+        elif method == "zscore":
+            mean = df[col].mean()
+            std = df[col].std()
+            z_scores = (df[col] - mean) / std
+            outliers = df[np.abs(z_scores) > threshold].index
+        else:
+            raise ValueError("Invalid method. Use 'iqr' or 'zscore'.")
+
+        outliers_dict[col] = list(outliers)
+
+        if strategy == "mean":
+            replacement_value = df[col].mean()
+        elif strategy == "median":
+            replacement_value = df[col].median()
+        elif strategy == "mode":
+            replacement_value = df[col].mode()[0]
+        elif strategy == "remove":
+            df_cleaned = df_cleaned.drop(outliers)
+            continue
+        elif strategy == "iqr_bound":
+            for index in outliers:
+                if df.loc[index, col] < lower_bound:
+                    df_cleaned.loc[index, col] = lower_bound
+                else:
+                    df_cleaned.loc[index, col] = upper_bound
+        else:
+            raise ValueError("Invalid strategy. Use 'mean', 'median', 'mode', 'remove', or 'iqr_bound'.")
+
+    return df_cleaned, outliers_dict
+
+    for col in df.select_dtypes(include=[np.number]).columns:  # Only check numeric columns
+        if method == "iqr":
+            Q1 = df[col].quantile(0.25)  # First quartile (25th percentile)
+            Q3 = df[col].quantile(0.75)  # Third quartile (75th percentile)
+            IQR = Q3 - Q1
+            lower_bound = Q1 - threshold * IQR
+            upper_bound = Q3 + threshold * IQR
+            outliers = df[(df[col] < lower_bound) | (df[col] > upper_bound)].index
+
+        elif method == "zscore":
+            mean = df[col].mean()
+            std = df[col].std()
+            z_scores = (df[col] - mean) / std
+            outliers = df[np.abs(z_scores) > threshold].index
+
+        else:
+            raise ValueError("Invalid method. Use 'iqr' or 'zscore'.")
+
+        outliers_dict[col] = list(outliers)
+
+    return outliers_dict
+
+
+# Detect and replace outliers
+df_cleaned, outliers = detect_and_replace_outliers(df, method="iqr", strategy="iqr_bound")
+
+
+def detect_outliers(df, method="iqr", threshold=1.5):
+    """
+    Detects outliers in each numerical column of a DataFrame.
+
+    Parameters:
+    - df (pd.DataFrame): The input DataFrame.
+    - method (str): The method to detect outliers. Options: "iqr" (default), "zscore".
+    - threshold (float): The threshold for detecting outliers.
+        - IQR default = 1.5
+        - Z-score default = 3
+
+    Returns:
+    - outliers_dict (dict): A dictionary where keys are column names and values are lists of outlier indices.
+    """
+    outliers_dict = {}
+
+    for col in df.select_dtypes(include=[np.number]).columns:  # Only check numeric columns
+        if method == "iqr":
+            Q1 = df[col].quantile(0.25)  # First quartile (25th percentile)
+            Q3 = df[col].quantile(0.75)  # Third quartile (75th percentile)
+            IQR = Q3 - Q1
+            lower_bound = Q1 - threshold * IQR
+            upper_bound = Q3 + threshold * IQR
+            outliers = df[(df[col] < lower_bound) | (df[col] > upper_bound)].index
+
+        elif method == "zscore":
+            mean = df[col].mean()
+            std = df[col].std()
+            z_scores = (df[col] - mean) / std
+            outliers = df[np.abs(z_scores) > threshold].index
+
+        else:
+            raise ValueError("Invalid method. Use 'iqr' or 'zscore'.")
+
+        outliers_dict[col] = list(outliers)
+
+    return outliers_dict
+
+
+# Example usage
+outliers = detect_outliers(df_cleaned, method="iqr")
+print("Outliers detected:", outliers)
+
+# Save dataset to CSV (optional)
+df_cleaned.to_csv("cleaned_synthetic_regression_dataset.csv", index=False)
