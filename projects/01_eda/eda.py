@@ -216,5 +216,10 @@ def detect_outliers(df, method="iqr", threshold=1.5):
 outliers = detect_outliers(df_cleaned, method="iqr")
 print("Outliers detected:", outliers)
 
+# Confirmed 8 features selected
+cols_to_keep = pd.Series(top_8_features.index)
+trimmed_dataset = df_cleaned.loc[:, cols_to_keep]
+trimmed_dataset['Target'] = df_cleaned['Target']
+
 # Save dataset to CSV (optional)
-df_cleaned.to_csv("cleaned_synthetic_regression_dataset.csv", index=False)
+trimmed_dataset.to_csv("cleaned_synthetic_regression_dataset.csv", index=False)
