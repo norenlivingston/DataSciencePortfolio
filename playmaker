@@ -1,0 +1,138 @@
+import pandas as pd
+import numpy as np
+import random
+
+df_filename = '2023WK7.csv'
+data = pd.read_csv(df_filename)
+
+# clean dates, derive date measures
+data['Date'] = pd.to_datetime(data['Date'])
+data['Week'] = data['Date'].dt.isocalendar().week
+data['Year'] = data['Date'].dt.isocalendar().year
+
+# data reduction
+reg_season = data[data['Date'] >= '2018-01-01']
+reg_season.reset_index(drop=True, inplace=True)
+reg_season.loc[reg_season['Year'] == 2020, 'Week']=reg_season.loc[reg_season['Year'] == 2020, 'Week']-1
+
+# longer season only good for 2 years, not enough data so dropping
+reg_season = reg_season[reg_season['Week'] > 6]
+
+# within-season week number
+reg_season['SeasonWeek'] = reg_season['Week'] - 35
+
+# fields to keep
+# cols = ['Week', 'Year', 'SeasonWeek', 'Home Team', 'Away Team',
+#         'Home Score', 'Away Score', 'Home Odds Open', 'Away Odds Open']
+cols = ['Home Team', 'Away Team','Home Odds Open', 'Away Odds Open']
+# data['Home Odds Open'] = data['Home Money Line']
+# data['Away Odds Open'] = data['Away Money Line']
+
+working_df = data[cols]
+working_df['Home Odds Open'] = np.where(working_df['Home Odds Open'] < 0, 1-(100/working_df['Home Odds Open']), working_df['Home Odds Open']/100+1)
+working_df['Away Odds Open'] = np.where(working_df['Away Odds Open'] < 0, 1-(100/working_df['Away Odds Open']), working_df['Away Odds Open']/100+1)
+
+# find range of game odds between fave-dog
+working_df.loc[:, ('Odds_Range')] = abs(working_df.loc[:, ('Home Odds Open')] - working_df.loc[:, ('Away Odds Open')])
+
+# add date fields
+working_df['Year'] = 2023
+working_df['SeasonWeek'] = 7
+
+
+# loop prep
+bet_dict = {}
+fave_win__ = {}
+checker__ = []
+factor = 3.5
+
+for y in list(set(working_df['Year'])):
+    for w in list(set(working_df['SeasonWeek'])):
+        # test case
+        test_case = working_df[(working_df['SeasonWeek'] == w) & (working_df['Year'] == y)]
+
+        bet_dict_key = str(y) + '-' + str(w)
+
+        test_case = test_case.nsmallest(5, 'Odds_Range')
+
+        test_case['HomeFave'] = np.where(test_case['Home Odds Open'] < test_case['Away Odds Open'], 1, 0)
+
+        '''
+        test_case = test_case.sample(5)
+        test_case['HomeWin'] = np.where(test_case['Away Score'] < test_case['Home Score'], 1, 0)
+        test_case['FaveWin'] = np.where(test_case['HomeFave'] == test_case['HomeWin'], 1, 0)
+
+        fave_win_counter = test_case['FaveWin'].sum()
+
+        if fave_win_counter not in (2, 3):
+            fave_win__[bet_dict_key] = fave_win_counter
+        '''
+
+        faves_home = test_case[test_case['HomeFave'] == 1][['Home Team', 'Home Odds Open', 'Odds_Range']]
+        faves_away = test_case[test_case['HomeFave'] == 0][['Away Team', 'Away Odds Open', 'Odds_Range']]
+        faves_home.rename({'Home Team': 'Team', 'Home Odds Open': 'Odds Open', 'Odds_Range': 'Odds_Range'}, axis=1, inplace=True)
+        faves_away.rename({'Away Team': 'Team', 'Away Odds Open': 'Odds Open', 'Odds_Range': 'Odds_Range'}, axis=1, inplace=True)
+        faves = pd.concat([faves_home, faves_away])
+
+        dogs_home = test_case[test_case['HomeFave'] == 0][['Home Team', 'Home Odds Open', 'Odds_Range']]
+        dogs_away = test_case[test_case['HomeFave'] == 1][['Away Team', 'Away Odds Open', 'Odds_Range']]
+        dogs_home.rename({'Home Team': 'Team', 'Home Odds Open':'Odds Open', 'Odds_Range':'Odds_Range'}, axis=1, inplace=True)
+        dogs_away.rename({'Away Team': 'Team', 'Away Odds Open':'Odds Open', 'Odds_Range':'Odds_Range'}, axis=1, inplace=True)
+        dogs = pd.concat([dogs_home, dogs_away])
+
+        # faves.sort_values('Odds_Range', ascending=False, inplace=True)
+        # dogs.sort_values('Odds_Range', ascending=True, inplace=True)
+
+        faves.sort_index(ascending=False, inplace=True)
+        dogs.sort_index(ascending=True, inplace=True)
+
+        wtl = pd.concat([faves, dogs])
+
+        odds = list(wtl['Odds Open'])
+
+        # array builder with odds
+        first = np.array([1, 0]).repeat(16)*odds[0]
+        second = np.array([1, 0, 1, 0]).repeat(8)*odds[1]
+        third = np.array([[1, 0, 1, 0], [1, 0, 1, 0]]).repeat(4)*odds[2]
+        forth = np.array([[1, 0, 1, 0, 1, 0, 1, 0], [1, 0, 1, 0, 1, 0, 1, 0]]).repeat(2)*odds[3]
+        fifth = np.array([1, 0]*16)*odds[4]
+        sixth = np.array([0, 1]*16)*odds[5]
+        seventh = np.array([[0, 1, 0, 1, 0, 1, 0, 1], [0, 1, 0, 1, 0, 1, 0, 1]]).repeat(2)*odds[6]
+        eighth = np.array([[0, 1, 0, 1], [0, 1, 0, 1]]).repeat(4)*odds[7]
+        ninth = np.array([0, 1, 0, 1]).repeat(8)*odds[8]
+        tenth = np.array([0, 1]).repeat(16)*odds[9]
+
+        parlay_matrix = np.append(first, [[second], [third], [forth], [fifth], [sixth],
+                                  [seventh], [eighth], [ninth], [tenth]]).reshape((10, 32))
+
+        parlay_df = pd.DataFrame(parlay_matrix)
+
+        parlay_df = parlay_df.replace(0, 1)
+
+        raw_df = pd.DataFrame(parlay_matrix)
+
+        raw_df = pd.DataFrame(np.where(raw_df > 0, 1, 0))
+        faves_counter = list((raw_df.loc[0:4, :].sum() > 1) & (raw_df.loc[0:4, :].sum() < 4))
+
+        parlay_df_trim = parlay_df.loc[:, faves_counter]
+        parlay_odds = list(parlay_df_trim.product() - 1)
+        bets = [(20 * factor)/x for x in parlay_odds]
+        pot = sum(bets)
+
+        raw_df_trim = raw_df.loc[:, faves_counter]
+        raw_df_trim.columns = list(range(20))
+        raw_df_trim = raw_df_trim.astype(str)
+
+        for r in range(raw_df_trim.shape[0]):
+            raw_df_trim.loc[[r]] = np.where(raw_df_trim.loc[[r]] == '1', str(list(wtl['Team'])[r]), '0')
+
+        for c in range(len(bets)):
+            inner_bet_dict_key = bet_dict_key + '-' + str(c)
+            bet_dict[inner_bet_dict_key] = pot, bets[c], parlay_odds[c], set(raw_df_trim[c])
+
+        if pot > (20 * factor):
+            checker__.append(pot)
+
+for k in bet_dict.keys():
+    print(bet_dict[k])
+
