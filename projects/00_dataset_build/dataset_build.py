@@ -1,40 +1,63 @@
+"""
+Stage 1 — Dataset Build
+Generates a synthetic regression dataset and writes it to disk.
+"""
+import logging
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 
-# Set random seed for reproducibility
-np.random.seed(42)
+log = logging.getLogger(__name__)
 
-# Number of samples and features
-num_samples = 2000
-num_features = 20
 
-# Generate features with normal distribution
-X = np.random.randn(num_samples, num_features)
+def build_dataset(config: dict) -> pd.DataFrame:
+    cfg        = config["data"]
+    n_samples  = cfg["n_samples"]
+    n_features = cfg["n_features"]
+    seed       = cfg["random_seed"]
+    out_path   = cfg["raw_path"]
 
-# Introduce high noise in three selected features
-noise_level = 5  # Higher noise level
-high_noise_indices = np.random.choice(num_features, 3, replace=False)
-for idx in high_noise_indices:
-    X[:, idx] += np.random.randn(num_samples) * noise_level
+    log.info("Generating dataset  (n_samples=%d, n_features=%d, seed=%d)",
+             n_samples, n_features, seed)
 
-# Ensure 8 features are strongly correlated with the target but not with themselves
-correlated_features = np.random.choice(num_features, 8, replace=False)
-true_coefficients = np.zeros(num_features)
-true_coefficients[correlated_features] = np.random.uniform(40, 90, 8)  # Stronger influence
+    rng = np.random.default_rng(seed)
+    X   = rng.standard_normal((n_samples, n_features))
 
-# Generate independent noise to reduce multicollinearity
-independent_noise = np.random.randn(num_samples, 8) * 0.3  # Small perturbations
-X[:, correlated_features] += independent_noise  # Introduce variations to reduce correlation among selected features
+    # Add high noise to 3 randomly chosen features to simulate real-world messiness
+    noisy_idx   = rng.choice(n_features, 3, replace=False)
+    X[:, noisy_idx] += rng.standard_normal((n_samples, 3)) * 5
 
-# Generate target variable as a weighted sum of selected features with additional noise
-y = (X[:, correlated_features] @ true_coefficients[correlated_features]) + np.random.randn(num_samples) * 1.5  # Lower noise
+    # 8 features are strongly correlated with the target
+    corr_idx     = rng.choice(n_features, 8, replace=False)
+    coefficients = rng.uniform(40, 90, 8)
+    X[:, corr_idx] += rng.standard_normal((n_samples, 8)) * 0.3
 
-# Create DataFrame
-df = pd.DataFrame(X, columns=[f"Feature_{i+1}" for i in range(num_features)])
-df['Target'] = y
+    y = X[:, corr_idx] @ coefficients + rng.standard_normal(n_samples) * 1.5
 
-# Save dataset to CSV (optional)
-df.to_csv("synthetic_regression_dataset.csv", index=False)
+    df = pd.DataFrame(X, columns=[f"Feature_{i+1}" for i in range(n_features)])
+    df["Target"] = y
 
-# Display first few rows
-print(df.head())
+    Path(out_path).parent.mkdir(parents=True, exist_ok=True)
+    df.to_csv(out_path, index=False)
+    log.info("Saved raw dataset → %s  (%d rows × %d cols)", out_path, *df.shape)
+
+    return df
+
+
+if __name__ == "__main__":
+    import yaml
+
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s  %(levelname)-8s  %(message)s")
+
+    # Support running from either projects/ or projects/00_dataset_build/
+    for search in [Path.cwd(), Path.cwd().parent]:
+        cfg_path = search / "config.yaml"
+        if cfg_path.exists():
+            with open(cfg_path) as f:
+                cfg = yaml.safe_load(f)
+            break
+    else:
+        raise FileNotFoundError("config.yaml not found. Run from projects/ directory.")
+
+    build_dataset(cfg)
