@@ -1,0 +1,32 @@
+# Central configuration — all pipeline parameters live here.
+# Edit this file to tune the pipeline without touching any source code.
+
+data:
+  raw_path:       "data/synthetic_regression_dataset.csv"
+  processed_path: "data/cleaned_synthetic_regression_dataset.csv"
+  n_samples:      2000
+  n_features:     20
+  random_seed:    42
+
+eda:
+  output_dir:        "01_eda/eda_visualizations"
+  top_n_features:    8
+  outlier_method:    "iqr"         # iqr | zscore
+  outlier_threshold: 1.5
+  outlier_strategy:  "iqr_bound"  # mean | median | iqr_bound | remove
+
+pipeline:
+  test_size:   0.2
+  cv_folds:    5
+  random_seed: 42
+  models:
+    random_forest:
+      n_estimators: 100
+      max_depth:    ~              # null = no depth limit
+    linear_regression: {}
+
+mlops:
+  model_path:  "02_ml_pipeline/best_model.pkl"
+  metrics_log: "03_mlops/metrics_log.json"
+  host:        "0.0.0.0"
+  port:        8000

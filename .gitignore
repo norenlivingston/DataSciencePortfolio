@@ -1,0 +1,27 @@
+# Generated data — run the pipeline to reproduce
+projects/data/
+
+# Trained model — reproduced by running pipeline.py
+projects/02_ml_pipeline/*.pkl
+
+# Generated outputs
+projects/01_eda/eda_visualizations/
+projects/02_ml_pipeline/feature_importances.png
+projects/03_mlops/metrics_log.json
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.env
+.venv/
+venv/
+dist/
+build/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# OS
+.DS_Store
+Thumbs.db
