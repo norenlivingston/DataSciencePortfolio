@@ -32,7 +32,11 @@ def _load_config() -> dict:
 
 _config   = _load_config()
 _model    = joblib.load(_config["mlops"]["model_path"])
-_features = list(_model.feature_names_in_)
+# Access feature names from the preprocessor (ColumnTransformer) directly —
+# it was fitted on the named DataFrame and reliably stores input feature names.
+# Pipeline.__getattr__ proxies to the last step (regressor), which was fitted
+# on a numpy array and may not have feature_names_in_ set.
+_features = list(_model.named_steps["preprocessor"].feature_names_in_)
 
 
 # ── App ───────────────────────────────────────────────────────────────────────
