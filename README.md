@@ -23,8 +23,12 @@ projects/
 ├── 02_ml_pipeline/
 │   └── pipeline.py          ← cross-validation, model selection, evaluation
 │
-└── 03_mlops/
-    └── serve.py             ← FastAPI inference endpoint
+├── 03_mlops/
+│   └── serve.py             ← FastAPI inference endpoint
+│
+└── 05_agents/
+    ├── mcp_server.py        ← MCP server exposing the pipeline as LLM tools
+    └── agent.py             ← tool-calling agent powered by Ollama (free, local)
 ```
 
 ---
@@ -115,6 +119,62 @@ Interactive docs available at `http://localhost:8000/docs`.
 
 ---
 
+## AI Agents & MCP
+
+### MCP Server
+The MCP server exposes the pipeline as tools any MCP-compatible client can call.
+
+```bash
+# Test in browser — no API key needed
+npx @modelcontextprotocol/inspector python 05_agents/mcp_server.py
+```
+
+Connect to **Claude Desktop** by adding this to `claude_desktop_config.json`:
+```json
+{
+  "mcpServers": {
+    "ml-pipeline": {
+      "command": "python",
+      "args": ["/absolute/path/to/projects/05_agents/mcp_server.py"]
+    }
+  }
+}
+```
+
+Tools exposed: `list_features` · `get_latest_metrics` · `get_run_history` · `predict`
+
+### Agent (Ollama — free, local)
+
+```bash
+# One-time setup
+curl -fsSL https://ollama.ai/install.sh | sh
+ollama pull qwen2.5
+
+# Run demo questions
+cd projects
+python 05_agents/agent.py
+
+# Ask anything
+python 05_agents/agent.py --question "Which model was selected and why?"
+```
+
+Sample output:
+```
+───────────────────────────────────────────────────────
+Q: What features does the model need? Make a prediction with all set to 1.0.
+───────────────────────────────────────────────────────
+  [tool]   list_features()
+  [result] ["Feature_3", "Feature_7", ...]
+
+  [tool]   predict({"features": {"Feature_3": 1.0, "Feature_7": 1.0, ...}})
+  [result] {"prediction": 284.73}
+
+A: The model requires 8 features. With all set to 1.0, the predicted
+   target value is 284.73.
+```
+
+---
+
 ## Skills Demonstrated
 
 | Area | Tools / Techniques |
@@ -123,13 +183,15 @@ Interactive docs available at `http://localhost:8000/docs`.
 | **EDA** | Correlation analysis, VIF (multicollinearity), IQR outlier treatment, Seaborn / Matplotlib |
 | **Machine Learning** | scikit-learn Pipelines, k-fold cross-validation, model comparison, feature importance |
 | **MLOps** | Model serialisation (joblib), metrics logging, FastAPI + Uvicorn serving |
+| **AI Agents** | Tool-calling agent loop, tool schema design, Ollama (local LLM) |
+| **MCP** | Custom MCP server, tool definitions, Claude Desktop / Inspector integration |
 | **Software Engineering** | Config-driven design, modular functions, structured logging, clean repo |
 
 ---
 
 ## Stack
 
-Python · scikit-learn · pandas · NumPy · FastAPI · Uvicorn · Pydantic · Matplotlib · Seaborn · statsmodels · PyYAML
+Python · scikit-learn · pandas · NumPy · FastAPI · Uvicorn · Pydantic · Matplotlib · Seaborn · statsmodels · PyYAML · MCP · Ollama
 
 ---
 

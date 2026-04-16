@@ -9,3 +9,7 @@ pyyaml~=6.0
 fastapi~=0.115.0
 uvicorn~=0.32.0
 pydantic~=2.10.0
+
+# 05_agents — install Ollama separately: https://ollama.ai
+mcp>=1.0.0
+ollama>=0.3.0
